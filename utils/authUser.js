@@ -5,7 +5,7 @@ import cookie from 'js-cookie';
 import baseUrl from './baseUrl';
 import catchErrors from './catchErrors';
 
-const setToken = (token) => {
+const setToken = ({ token }) => {
   cookie.set('token', token);
   return Router.push('/');
 };
@@ -45,5 +45,14 @@ export const loginUser = async (user, setError, setLoading) => {
     setError(errorMessage);
   } finally {
     setLoading(false);
+  }
+};
+
+export const redirectUser = (ctx, location) => {
+  if (ctx.req) {
+    ctx.res.writeHead(302, { Location: location });
+    ctx.res.end();
+  } else {
+    Router.push(location);
   }
 };
