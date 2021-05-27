@@ -9,13 +9,3 @@ function Index({ user, userFollowStats }) {
 }
 
 export default Index;
-
-// Index.getInitialProps = async (ctx) => {
-//   try {
-//     const resp = await axios.get('https://jsonplaceholder.typicode.com/posts');
-
-//     return { posts: resp.data };
-//   } catch (error) {
-//     return { setError: true };
-//   }
-// };

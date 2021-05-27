@@ -1,18 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Form,
-  Button,
-  Message,
-  Segment,
-  TextArea,
-  Divider,
-} from 'semantic-ui-react';
-import axios from 'axios';
+import { Form, Button, Message, Segment, Divider } from 'semantic-ui-react';
+import cookie from 'js-cookie';
+
 import {
   FooterMessage,
   HeaderMessage,
 } from '../components/common/WelcomeMessage';
-import baseurl from '../utils/baseUrl';
 import { loginUser } from '../utils/authUser';
 
 function Login() {
@@ -26,6 +19,17 @@ function Login() {
   const [submitDisabled, setSubmitDisabled] = useState(true);
 
   const { email, password } = user;
+
+  useEffect(() => {
+    document.title = 'Welcome Back';
+    const userEmail = cookie.get('userEmail');
+
+    if (userEmail)
+      setUser((prev) => ({
+        ...prev,
+        email: userEmail,
+      }));
+  }, []);
 
   useEffect(() => {
     const isUser = Object.values({
