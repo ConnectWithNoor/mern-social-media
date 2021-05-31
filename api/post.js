@@ -146,6 +146,22 @@ router.put('/unlike/:postId', authMiddleware, async (req, res) => {
     return res.status(200).send('Post Unliked');
   } catch (error) {
     console.error(error);
+    return res.status(400).send('Something went wrong');
+  }
+});
+
+// get all likes
+
+router.get('/like/:postId', authMiddleware, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const post = await PostModel.findById(postId).populate('likes.user');
+
+    if (!post) return res.status(404).send(`Post doesn't exist`);
+
+    return res.status(200).send(post.likes);
+  } catch (error) {
+    console.error(error);
     return res.status(200).send('Something went wrong');
   }
 });
