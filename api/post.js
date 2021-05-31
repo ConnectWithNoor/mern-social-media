@@ -92,7 +92,7 @@ router.delete('/:postId', authMiddleware, async (req, res) => {
 
 // Like a post
 
-router.post('/like/:postId', authMiddleware, async (req, res) => {
+router.put('/like/:postId', authMiddleware, async (req, res) => {
   try {
     const { postId } = req.params;
     const { userId } = req;
@@ -106,7 +106,7 @@ router.post('/like/:postId', authMiddleware, async (req, res) => {
     );
 
     if (isAlreadyLiked.length > 0) {
-      return res.status(401).send('Post Already liked');
+      return res.status(401).send('Post already liked');
     }
 
     // if post not already liked so, like it.
@@ -114,6 +114,36 @@ router.post('/like/:postId', authMiddleware, async (req, res) => {
     await post.save();
 
     return res.status(200).send('Post Liked');
+  } catch (error) {
+    console.error(error);
+    return res.status(200).send('Something went wrong');
+  }
+});
+
+// Unlike a post
+
+router.put('/unlike/:postId', authMiddleware, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { userId } = req;
+
+    const post = await PostModel.findById(postId);
+
+    if (!post) return res.status(404).send(`Post doesn't exist`);
+
+    const isLikedIndex = post.likes
+      .map((like) => like.user.toString())
+      .indexOf(userId);
+
+    if (isLikedIndex < 0) {
+      return res.status(401).send('Post already not liked');
+    }
+
+    // if post already liked so, unlike it.
+    await post.likes.splice(isLikedIndex, 1);
+    await post.save();
+
+    return res.status(200).send('Post Unliked');
   } catch (error) {
     console.error(error);
     return res.status(200).send('Something went wrong');
