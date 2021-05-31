@@ -90,4 +90,34 @@ router.delete('/:postId', authMiddleware, async (req, res) => {
   }
 });
 
+// Like a post
+
+router.post('/like/:postId', authMiddleware, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { userId } = req;
+
+    const post = await PostModel.findById(postId);
+
+    if (!post) return res.status(404).send(`Post doesn't exist`);
+
+    const isAlreadyLiked = post.likes.filter(
+      (like) => like.user.toString() === userId
+    );
+
+    if (isAlreadyLiked.length > 0) {
+      return res.status(401).send('Post Already liked');
+    }
+
+    // if post not already liked so, like it.
+    await post.likes.unshift({ user: userId });
+    await post.save();
+
+    return res.status(200).send('Post Liked');
+  } catch (error) {
+    console.error(error);
+    return res.status(200).send('Something went wrong');
+  }
+});
+
 module.exports = router;
