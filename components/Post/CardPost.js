@@ -52,10 +52,14 @@ function CardPost({ post, user, setShowToaster }) {
                 <Popup
                   on='click'
                   position='top right'
-                  trigger={<Image src='/deleteIcon.svg' />}
-                  style={{ cursor: 'pointer' }}
-                  size='mini'
-                  floated='right'
+                  trigger={
+                    <Image
+                      src='/deleteIcon.svg'
+                      style={{ cursor: 'pointer' }}
+                      floated='right'
+                      size='mini'
+                    />
+                  }
                 >
                   <Header as='h4' content='Are you sure?' />
                   <p>The action is irrevesible!</p>
