@@ -1,5 +1,5 @@
 const express = require('express');
-const router = express.Router();
+const uuid = require('uuid').v4;
 
 const authMiddleware = require('../middleware/authMiddleware');
 const userModel = require('../models/UserModel');
@@ -7,6 +7,7 @@ const PostModel = require('../models/PostModal');
 const FollowerModel = require('../models/FollowerModel');
 const UserModel = require('../models/UserModel');
 
+const router = express.Router();
 // create a post
 
 router.post('/', authMiddleware, async (req, res) => {
@@ -163,6 +164,74 @@ router.get('/like/:postId', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(200).send('Something went wrong');
+  }
+});
+
+// create a comment
+
+router.post('/comment/:postId', authMiddleware, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { text } = req.body;
+    const { userId } = req;
+
+    if (text.length <= 0)
+      return res.status(401).send('comment should not be empty');
+
+    const post = await PostModel.findById(postId);
+
+    if (!post) return res.status(404).send('No post found');
+
+    const newComment = {
+      _id: uuid(),
+      text,
+      user: userId,
+      date: Date.now(),
+    };
+
+    await post.comments.unshift(newComment);
+    await post.save();
+
+    return res.status(200).send('Comment added successfully');
+  } catch (error) {
+    console.error(error);
+    return res.status(200).send('Something went wrong');
+  }
+});
+
+// Delete a comment
+
+router.delete('/:postId/:commentId', authMiddleware, async (req, res) => {
+  try {
+    const { postId, commentId } = req.params;
+
+    const post = await PostModel.findById(postId);
+
+    if (!post) return res.status(404).send('Post not found');
+
+    const comment = post.comments.find((comment) => comment._id === commentId);
+
+    if (!comment) return res.status(404).send('Comment not found');
+
+    const user = await UserModel.findById(req.userId);
+
+    // if an admin (root user) is deleting the comment Or
+    // if the comment owner itself is deleting the comment
+
+    if (user.role === 'root' || post.user.toString() === req.userId) {
+      const index = post.comments
+        .map((comment) => comment._id)
+        .indexOf(commentId);
+
+      await post.comments.splice(index, 1);
+      await post.save();
+      return res.status(200).send('Comment deleted succesfully');
+    }
+
+    return res.status(401).send('You are not allowed to delete that comment');
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send('Something went wrong');
   }
 });
 
