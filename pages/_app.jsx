@@ -53,6 +53,7 @@ MyApp.getInitialProps = async ({ Component, ctx }) => {
     }
 
     pageProps = {
+      ...pageProps,
       user,
       userFollowStats,
     };

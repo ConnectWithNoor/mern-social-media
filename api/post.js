@@ -26,7 +26,7 @@ router.post('/', authMiddleware, async (req, res) => {
 
     const post = await new PostModel(newPost).save();
 
-    return res.status(200).send({ post });
+    return res.status(200).send({ _id: post._id });
   } catch (error) {
     console.error(error);
     return res.status(500).send('Something went wrong');
@@ -192,7 +192,9 @@ router.post('/comment/:postId', authMiddleware, async (req, res) => {
     await post.comments.unshift(newComment);
     await post.save();
 
-    return res.status(200).send('Comment added successfully');
+    return res.status(200).send({
+      _id: newComment._id,
+    });
   } catch (error) {
     console.error(error);
     return res.status(200).send('Something went wrong');
