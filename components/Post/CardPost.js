@@ -132,7 +132,7 @@ function CardPost({ post, user, setShowToaster, setPosts }) {
                 )}
 
               {comments.length > 3 && (
-                <Button context='View More' color='teal' basic circular />
+                <Button content='View More' color='teal' basic circular />
               )}
 
               <Divider hidden />
