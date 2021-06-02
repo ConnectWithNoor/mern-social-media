@@ -7,6 +7,7 @@ import { NoPosts } from '../components/Layout/NoData';
 
 import CreatePost from '../components/Post/CreatePost';
 import CardPost from '../components/Post/CardPost';
+import { PostDeleteToastr } from '../components/Layout/Toastr';
 
 function Index({ user, postsData, errorLoading, userFollowStats }) {
   const [posts, setPosts] = useState(postsData);
@@ -16,10 +17,15 @@ function Index({ user, postsData, errorLoading, userFollowStats }) {
     document.title = `Welcome, ${user.name.split(' ')[0]}`;
   }, []);
 
+  useEffect(() => {
+    showToaster && setTimeout(() => setShowToaster(false), 3000);
+  }, showToaster);
+
   return posts.length <= 0 || errorLoading ? (
     <NoPosts />
   ) : (
     <>
+      {showToaster && <PostDeleteToastr />}
       <Segment>
         <CreatePost user={user} setPosts={setPosts} />
         {posts.map((post) => (

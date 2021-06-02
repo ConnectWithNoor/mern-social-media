@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Form, Button, Image, Divider, Message, Icon } from 'semantic-ui-react';
+
 import uploadPic from '../../utils/uploadPicToCloudinary';
+import { submitNewPost } from '../../utils/postActions';
 
 function CreatePost({ user, setPosts }) {
   const [newPost, setNewPost] = useState({ text: '', location: '' });
@@ -27,6 +29,28 @@ function CreatePost({ user, setPosts }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    let picUrl;
+
+    if (media) picUrl = await uploadPic(media);
+    if (!picUrl) {
+      setLoading(false);
+      return setError('Error uploading image');
+    }
+
+    await submitNewPost(
+      user,
+      newPost.text,
+      newPost.location,
+      picUrl,
+      setPosts,
+      setNewPost,
+      setError
+    );
+
+    setMedia(null);
+    setMediaPreview(null);
+    setLoading(false);
   };
 
   return (
@@ -81,6 +105,7 @@ function CreatePost({ user, setPosts }) {
             cursor: 'pointer',
             borderColor: highlighted ? 'green' : 'black',
           }}
+          onClick={() => inputRef.current.click()}
           onDragOver={(e) => {
             e.preventDefault();
             setHighlighted(true);
@@ -99,11 +124,7 @@ function CreatePost({ user, setPosts }) {
           }}
         >
           {!media ? (
-            <Icon
-              name='plus'
-              onClick={() => inputRef.current.click()}
-              size='big'
-            />
+            <Icon name='plus' size='big' />
           ) : (
             <Image
               style={{ height: '150px', width: '150px' }}
@@ -111,7 +132,6 @@ function CreatePost({ user, setPosts }) {
               alt='post image'
               centered
               size='medium'
-              onClick={() => inputRef.current.click()}
             />
           )}
         </div>

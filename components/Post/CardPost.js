@@ -15,8 +15,9 @@ import Link from 'next/link';
 import PostComments from './PostComments';
 import CommentInputField from './CommentInputField';
 import calculateTime from '../../utils/calculateTime';
+import { deletePost } from '../../utils/postActions';
 
-function CardPost({ post, user, setShowToaster }) {
+function CardPost({ post, user, setShowToaster, setPosts }) {
   const [likes, setLikes] = useState(post.likes);
   const [comments, setComments] = useState(post.comments);
   const [error, setError] = useState(null);
@@ -63,7 +64,14 @@ function CardPost({ post, user, setShowToaster }) {
                 >
                   <Header as='h4' content='Are you sure?' />
                   <p>The action is irrevesible!</p>
-                  <Button color='red' icon='trash' content='Delete' />
+                  <Button
+                    color='red'
+                    icon='trash'
+                    content='Delete'
+                    onClick={() =>
+                      deletePost(post._id, setPosts, setShowToaster)
+                    }
+                  />
                 </Popup>
               </>
             )}
@@ -84,52 +92,54 @@ function CardPost({ post, user, setShowToaster }) {
                 wordSpacing: '0.35px',
               }}
             >
-              <Card.Content extra>
-                <Icon
-                  name={isLiked ? 'heart' : 'heart outline'}
-                  color='red'
-                  style={{ cursor: 'pointer' }}
-                />
-                {likes.length > 0 && (
-                  <span className='spanLikesList'>
-                    {`${likes.length} ${likes.length <= 1 ? 'like' : 'likes'}`}
-                  </span>
-                )}
-
-                <Icon
-                  name='comments outline'
-                  style={{ marginLeft: '7px' }}
-                  color='blue'
-                />
-
-                {comments.length > 0 &&
-                  comments.map(
-                    (comment, index) =>
-                      // to rander only upto 3 comments by default
-                      index < 3 && (
-                        <PostComments
-                          key={comment._id}
-                          comment={comment}
-                          postId={post._id}
-                          user={user}
-                          setComments={setComments}
-                        />
-                      )
-                  )}
-
-                {comments.length > 3 && (
-                  <Button context='View More' color='teal' basic circular />
-                )}
-
-                <Divider hidden />
-
-                <CommentInputField
-                  user={user}
-                  postId={post._id}
-                  setComments={setComments}
-                />
-              </Card.Content>
+              {post.text}
             </Card.Description>
+
+            <Card.Content extra>
+              <Icon
+                name={isLiked ? 'heart' : 'heart outline'}
+                color='red'
+                style={{ cursor: 'pointer' }}
+              />
+              {likes.length > 0 && (
+                <span className='spanLikesList'>
+                  {`${likes.length} ${likes.length <= 1 ? 'like' : 'likes'}`}
+                </span>
+              )}
+
+              <Icon
+                name='comments outline'
+                style={{ marginLeft: '7px' }}
+                color='blue'
+              />
+
+              {comments.length > 0 &&
+                comments.map(
+                  (comment, index) =>
+                    // to rander only upto 3 comments by default
+                    index < 3 && (
+                      <PostComments
+                        key={comment._id}
+                        comment={comment}
+                        postId={post._id}
+                        user={user}
+                        setComments={setComments}
+                      />
+                    )
+                )}
+
+              {comments.length > 3 && (
+                <Button context='View More' color='teal' basic circular />
+              )}
+
+              <Divider hidden />
+
+              <CommentInputField
+                user={user}
+                postId={post._id}
+                setComments={setComments}
+              />
+            </Card.Content>
           </Card.Content>
         </Card>
       </Segment>
