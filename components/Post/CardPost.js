@@ -15,7 +15,7 @@ import Link from 'next/link';
 import PostComments from './PostComments';
 import CommentInputField from './CommentInputField';
 import calculateTime from '../../utils/calculateTime';
-import { deletePost } from '../../utils/postActions';
+import { deletePost, likePost } from '../../utils/postActions';
 
 function CardPost({ post, user, setShowToaster, setPosts }) {
   const [likes, setLikes] = useState(post.likes);
@@ -100,6 +100,9 @@ function CardPost({ post, user, setShowToaster, setPosts }) {
                 name={isLiked ? 'heart' : 'heart outline'}
                 color='red'
                 style={{ cursor: 'pointer' }}
+                onClick={() =>
+                  likePost(post._id, user._id, setLikes, isLiked ? false : true)
+                }
               />
               {likes.length > 0 && (
                 <span className='spanLikesList'>

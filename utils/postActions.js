@@ -54,3 +54,19 @@ export const deletePost = async (postId, setPosts, setShowToaster) => {
     alert(catchError(error));
   }
 };
+
+// Used to like and unlike a post ( based on the like = true )
+
+export const likePost = async (postId, userId, setLikes, like = true) => {
+  try {
+    if (like) {
+      await Axios.put(`/like/${postId}`);
+      setLikes((prev) => [...prev, { user: userId }]);
+    } else {
+      await Axios.put(`/unlike/${postId}`);
+      setLikes((prev) => prev.filter((like) => like.user !== userId));
+    }
+  } catch (error) {
+    alert(catchError(error));
+  }
+};
