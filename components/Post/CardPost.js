@@ -15,6 +15,8 @@ import Link from 'next/link';
 import PostComments from './PostComments';
 import CommentInputField from './CommentInputField';
 import LikesList from './LikesList';
+import ImageModal from './ImageModal';
+import NoImageModal from './NoImageModal';
 
 import calculateTime from '../../utils/calculateTime';
 import { deletePost, likePost } from '../../utils/postActions';
@@ -23,12 +25,40 @@ function CardPost({ post, user, setShowToaster, setPosts }) {
   const [likes, setLikes] = useState(post.likes);
   const [comments, setComments] = useState(post.comments);
   const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const isLiked =
     likes.length > 0 &&
     likes.filter((like) => like.user === user._id).length > 0;
 
+  const addPropsToModal = () => ({
+    post,
+    user,
+    setLikes,
+    setComments,
+    likes,
+    isLiked,
+    comments,
+  });
+
   return (
     <>
+      {showModal && (
+        <Modal
+          onClose={() => setShowModal(false)}
+          open={showModal}
+          closeIcon
+          closeOnDimmerClick
+        >
+          <Modal.Content>
+            {post.picUrl ? (
+              <ImageModal {...addPropsToModal()} />
+            ) : (
+              <NoImageModal {...addPropsToModal()} />
+            )}
+          </Modal.Content>
+        </Modal>
+      )}
+
       <Segment basic>
         <Card color='teal' fluid>
           {post.picUrl && (
@@ -39,6 +69,7 @@ function CardPost({ post, user, setShowToaster, setPosts }) {
               wrapped
               ui={false}
               alt='PostImage'
+              onClick={() => setShowModal(true)}
             />
           )}
 
@@ -141,7 +172,13 @@ function CardPost({ post, user, setShowToaster, setPosts }) {
                 )}
 
               {comments.length > 3 && (
-                <Button content='View More' color='teal' basic circular />
+                <Button
+                  content='View More'
+                  color='teal'
+                  basic
+                  circular
+                  onClick={() => setShowModal(true)}
+                />
               )}
 
               <Divider hidden />
