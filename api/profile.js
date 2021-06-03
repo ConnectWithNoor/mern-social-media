@@ -95,7 +95,7 @@ router.get('/following/:userId', authMiddleware, async (req, res) => {
 
 // Follow a user
 
-router.post('/follow/:userToFollowId', authMiddleware, async (req, res) => {
+router.put('/follow/:userToFollowId', authMiddleware, async (req, res) => {
   const { userToFollowId } = req.params;
   const { userId } = req;
 
@@ -126,6 +126,49 @@ router.post('/follow/:userToFollowId', authMiddleware, async (req, res) => {
     await userToFollow.save();
 
     return res.status(200).send('User has been followed successfully.');
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send('Something went wrong');
+  }
+});
+
+// Unfollow a user
+router.put('/unfollow/:userToUnfollowId', authMiddleware, async (req, res) => {
+  const { userToUnfollowId } = req.params;
+  const { userId } = req;
+
+  try {
+    const user = await FollowerModel.findOne({ user: userId });
+    const userToUnfollow = await FollowerModel.findOne({
+      user: userToUnfollowId,
+    });
+
+    if (!user || !userToUnfollow) return res.status(404).send('User not found');
+
+    // checking if not already following
+    const isNotAlreadyFollowing =
+      user.following.filter(
+        (following) => following.user.toString() === userToUnfollowId
+      ).length <= 0;
+
+    if (isNotAlreadyFollowing) return res.status(401).send('User Not Followed');
+
+    //   removeing userToFollowId in following of user
+    const removeFollowingIndex = user.following
+      .map((following) => following.user.toString())
+      .indexOf(userToUnfollowId);
+
+    await user.following.splice(removeFollowingIndex, 1);
+    await user.save();
+
+    // remove  user's id on userToFollowId's followers
+    const removeFollowersIndex = user.followers
+      .map((follower) => follower.user.toString())
+      .indexOf(userToUnfollowId);
+    await userToUnfollow.followers.splice(removeFollowersIndex, 1);
+    await userToUnfollow.save();
+
+    return res.status(200).send('User has been unfollowed successfully.');
   } catch (error) {
     console.error(error);
     return res.status(500).send('Something went wrong');
