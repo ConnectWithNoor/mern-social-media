@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -62,7 +63,7 @@ router.get('/post/:username', authMiddleware, async (req, res) => {
 router.get('/followers/:userId', authMiddleware, async (req, res) => {
   const { userId } = req.params;
   try {
-    const user = await UserModel.findOne({
+    const user = await FollowerModel.findOne({
       user: userId,
     }).populate('followers.user');
 
@@ -80,7 +81,7 @@ router.get('/followers/:userId', authMiddleware, async (req, res) => {
 router.get('/following/:userId', authMiddleware, async (req, res) => {
   const { userId } = req.params;
   try {
-    const user = await UserModel.findOne({
+    const user = await FollowerModel.findOne({
       user: userId,
     }).populate('following.user');
 
@@ -169,6 +170,95 @@ router.put('/unfollow/:userToUnfollowId', authMiddleware, async (req, res) => {
     await userToUnfollow.save();
 
     return res.status(200).send('User has been unfollowed successfully.');
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send('Something went wrong');
+  }
+});
+
+// update a profile
+// NOT TESTED YET
+
+router.post('/update', authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req;
+    const { bio, facebook, youtube, twitter, instagram, profilePicUrl } =
+      req.body;
+    let profile = {};
+
+    // Creating Profile Model
+
+    profile = {
+      user: userId,
+      bio,
+      social: {
+        facebook: facebook || '',
+        twitter: twitter || '',
+        youtube: youtube || '',
+        instagram: instagram || '',
+      },
+    };
+
+    await ProfileModel.findByIdAndUpdate(
+      { user: userId },
+      { $set: profile },
+      { new: true }
+    );
+
+    if (profilePicUrl) {
+      const user = await UserModel.findById(userId);
+      user.profilePicUrl = profilePicUrl;
+      await user.save();
+    }
+
+    return res.status(200).send('User has been updated successfully.');
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send('Something went wrong');
+  }
+});
+
+// update password
+// NOT TESTED
+
+router.post('/settings/password', authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (newPassword.length < 6)
+      return res.status(401).send('Password must be atleast 6 characters');
+
+    const user = await UserModel.findById(req.userId).select('+password');
+
+    const isPassword = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isPassword) return res.status(401).send('Invalid Password');
+
+    user.password = await bcrypt.hash(newPassword, 10);
+
+    await user.save();
+
+    return res.status(200).send('Password has been updated successfully.');
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send('Something went wrong');
+  }
+});
+
+// Update Message popup settings
+
+router.post('/settings/messagePopup', authMiddleware, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.userId);
+
+    if (user.newMessagePopup) {
+      user.newMessagePopup = false;
+      user.save();
+    } else {
+      user.newMessagePopup = true;
+      user.save();
+    }
+    return res.status(200).send('Message Popup has been updated successfully.');
   } catch (error) {
     console.error(error);
     return res.status(500).send('Something went wrong');

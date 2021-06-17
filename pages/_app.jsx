@@ -10,10 +10,10 @@ import 'semantic-ui-css/semantic.min.css';
 const protectedRoutesPath = [
   '/',
   '/[username]',
-  '/notification',
+  // '/notification',
   '/post/[postId]',
-  '/message',
-  'search',
+  // '/message',
+  // 'search',
 ];
 
 function MyApp({ Component, pageProps }) {
@@ -49,7 +49,6 @@ MyApp.getInitialProps = async ({ Component, ctx }) => {
     });
 
     const { user, userFollowStats } = resp.data;
-
     if (user && !protectedRoutes) {
       redirectUser(ctx, '/');
     }
