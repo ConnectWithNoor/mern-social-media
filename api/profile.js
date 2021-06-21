@@ -199,7 +199,7 @@ router.post('/update', authMiddleware, async (req, res) => {
       },
     };
 
-    await ProfileModel.findByIdAndUpdate(
+    await ProfileModel.findOneAndUpdate(
       { user: userId },
       { $set: profile },
       { new: true }
