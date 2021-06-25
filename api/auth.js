@@ -6,6 +6,7 @@ const isEmail = require('validator/lib/isEmail');
 const UserModel = require('../models/UserModel');
 const FollowerModel = require('../models/FollowerModel');
 const NotificationModel = require('../models/NotificationModel');
+const ChatModel = require('../models/ChatModel');
 
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -54,6 +55,14 @@ router.post('/', async (req, res) => {
 
     if (!notificationModel) {
       await new NotificationModel({ user: user._id, notification: [] }).save();
+    }
+
+    const chatModel = await ChatModel.findOne({
+      user: user._id,
+    });
+
+    if (!chatModel) {
+      await new ChatModel({ user: user._id, chats: [] }).save();
     }
 
     // sending jwtresponse to frontend

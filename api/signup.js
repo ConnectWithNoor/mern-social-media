@@ -7,6 +7,7 @@ const UserModel = require('../models/UserModel');
 const FollowerModel = require('../models/FollowerModel');
 const ProfileModel = require('../models/ProfileModel');
 const NotificationModel = require('../models/NotificationModel');
+const ChatModel = require('../models/ChatModel');
 
 const { userPng } = require('../utilsServer/userPng');
 const { regexUserName } = require('../utils/regex');
@@ -97,7 +98,8 @@ router.post('/', async (req, res) => {
 
     // Creating Notification Object for the user
     await new NotificationModel({ user: user._id, notification: [] }).save();
-
+    // Creating Chat Object for the user
+    await new ChatModel({ user: user._id, chats: [] }).save();
     // sending jwtresponse to frontend
 
     jwt.sign(
