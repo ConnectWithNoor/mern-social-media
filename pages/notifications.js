@@ -25,12 +25,11 @@ function Notifications({ notifications, errorloading, user, userFollowStats }) {
             },
           }
         );
-
-        return () => notificationRead();
       } catch (error) {
         console.error(error);
       }
     };
+    return () => notificationRead();
   }, []);
 
   return (
@@ -44,7 +43,7 @@ function Notifications({ notifications, errorloading, user, userFollowStats }) {
                 overflow: 'auto',
                 height: '40rem',
                 position: 'relative',
-                width: '200%',
+                width: '100%',
               }}
             >
               <Feed size='small'>

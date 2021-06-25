@@ -21,7 +21,7 @@ export const followUser = async (userToFollowId, setUserFollowStats) => {
       following: [...prev.following, { user: userToFollowId }],
     }));
   } catch (error) {
-    alert(catchErrors(errors));
+    alert(catchErrors(error));
   }
 };
 
@@ -36,7 +36,7 @@ export const unfollowUser = async (userToUnfollowId, setUserFollowStats) => {
       ),
     }));
   } catch (error) {
-    alert(catchErrors(errors));
+    alert(catchErrors(error));
   }
 };
 
