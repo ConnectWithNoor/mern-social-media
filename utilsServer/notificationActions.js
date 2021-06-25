@@ -4,9 +4,8 @@ const NotificationModel = require('../models/NotificationModel');
 const setNotificationToUnread = async (userId) => {
   try {
     const user = await UserModel.findById(userId);
-
-    if (!user.undreadNotification) {
-      user.undreadNotification = true;
+    if (!user.unreadNotification) {
+      user.unreadNotification = true;
       await user.save();
     }
 

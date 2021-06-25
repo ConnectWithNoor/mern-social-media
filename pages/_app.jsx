@@ -10,7 +10,7 @@ import 'semantic-ui-css/semantic.min.css';
 const protectedRoutesPath = [
   '/',
   '/[username]',
-  // '/notification',
+  '/notifications',
   '/post/[postId]',
   // '/message',
   // 'search',
@@ -28,7 +28,7 @@ MyApp.getInitialProps = async ({ Component, ctx }) => {
   const { token } = parseCookies(ctx);
 
   let pageProps;
-
+  console.log(ctx.pathname);
   const protectedRoutes = protectedRoutesPath.some(
     (ele) => ctx.pathname === ele
   );
