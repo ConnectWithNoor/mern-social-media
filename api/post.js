@@ -113,7 +113,9 @@ router.get('/:postId', authMiddleware, async (req, res) => {
   try {
     const { postId } = req.params;
 
-    const post = await PostModel.findById(postId);
+    const post = await PostModel.findById(postId)
+      .populate('user')
+      .populate('comments.user');
 
     if (!post) return res.status(404).send('Post not found');
 

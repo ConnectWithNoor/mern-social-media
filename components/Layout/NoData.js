@@ -56,9 +56,18 @@ export const NoPosts = () => (
 );
 
 export const NoProfile = () => (
-  <Message info icon='meh' header='Hey!' content='No Profile Found.' />
+  <Message info icon='meh' header='Oops!' content='No Profile Found.' />
 );
 
 export const NoNotifications = () => (
-  <Message info icon='meh' header='Hey!' content='No Notifications.' />
+  <Message info icon='meh' header='Oops!' content='No Notifications.' />
+);
+
+export const NoPostFound = () => (
+  <Message
+    info
+    icon='meh'
+    header='Oops!'
+    content='No Post Found. Double check the Post Id'
+  />
 );

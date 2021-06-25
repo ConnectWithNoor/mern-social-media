@@ -26,6 +26,7 @@ router.post(`/`, authMiddleware, async (req, res) => {
     const { userId } = req;
 
     const user = await UserModel.findById(userId);
+
     if (user.unreadNotification) {
       user.unreadNotification = false;
       await user.save();
