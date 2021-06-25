@@ -90,6 +90,7 @@ Index.getInitialProps = async (ctx) => {
       },
       params: { pageNumber: 1 },
     });
+
     return { postsData: resp.data.post };
   } catch (error) {
     return { errorLoading: true };

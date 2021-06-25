@@ -33,7 +33,7 @@ function CreatePost({ user, setPosts }) {
     let picUrl;
 
     if (media) picUrl = await uploadPic(media);
-    if (!picUrl) {
+    if (media && !picUrl) {
       setLoading(false);
       return setError('Error uploading image');
     }

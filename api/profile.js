@@ -10,6 +10,11 @@ const ProfileModel = require('../models/ProfileModel');
 
 const router = express.Router();
 
+const {
+  newFollowerNotification,
+  removeFollowerNotification,
+} = require('../utilsServer/notificationActions');
+
 // Get profile Info
 
 router.get('/:username', authMiddleware, async (req, res) => {
@@ -126,6 +131,8 @@ router.put('/follow/:userToFollowId', authMiddleware, async (req, res) => {
     await userToFollow.followers.unshift({ user: userId });
     await userToFollow.save();
 
+    await newFollowerNotification(userId, userToFollowId);
+
     return res.status(200).send('User has been followed successfully.');
   } catch (error) {
     console.error(error);
@@ -168,6 +175,8 @@ router.put('/unfollow/:userToUnfollowId', authMiddleware, async (req, res) => {
       .indexOf(userToUnfollowId);
     await userToUnfollow.followers.splice(removeFollowersIndex, 1);
     await userToUnfollow.save();
+
+    await removeFollowerNotification(userId, userToUnfollowId);
 
     return res.status(200).send('User has been unfollowed successfully.');
   } catch (error) {

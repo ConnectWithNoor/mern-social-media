@@ -5,6 +5,7 @@ const isEmail = require('validator/lib/isEmail');
 
 const UserModel = require('../models/UserModel');
 const FollowerModel = require('../models/FollowerModel');
+const NotificationModel = require('../models/NotificationModel');
 
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -45,6 +46,15 @@ router.post('/', async (req, res) => {
     const isCorrectPassword = await bycrypt.compare(password, user.password);
 
     if (!isCorrectPassword) return res.status(401).send(`Invalid credentials`);
+
+    //
+    const notificationModel = await NotificationModel.findOne({
+      user: user._id,
+    });
+
+    if (!notificationModel) {
+      await new NotificationModel({ user: user._id, notification: [] }).save();
+    }
 
     // sending jwtresponse to frontend
 

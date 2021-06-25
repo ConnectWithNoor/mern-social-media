@@ -5,10 +5,12 @@ const isEmail = require('validator/lib/isEmail');
 
 const UserModel = require('../models/UserModel');
 const FollowerModel = require('../models/FollowerModel');
-const ProfileModel = require('../models//ProfileModel');
+const ProfileModel = require('../models/ProfileModel');
+const NotificationModel = require('../models/NotificationModel');
 
 const { userPng } = require('../utilsServer/userPng');
 const { regexUserName } = require('../utils/regex');
+
 const router = express.Router();
 
 // check if username exists
@@ -92,6 +94,9 @@ router.post('/', async (req, res) => {
     };
 
     await new FollowerModel(followers).save();
+
+    // Creating Notification Object for the user
+    await new NotificationModel({ user: user._id, notification: [] }).save();
 
     // sending jwtresponse to frontend
 

@@ -7,6 +7,13 @@ const PostModel = require('../models/PostModal');
 const FollowerModel = require('../models/FollowerModel');
 const UserModel = require('../models/UserModel');
 
+const {
+  removeLikeNotification,
+  newLikeNotification,
+  newCommentNotification,
+  removeCommentNotification,
+} = require('../utilsServer/notificationActions');
+
 const router = express.Router();
 // create a post
 
@@ -37,26 +44,61 @@ router.post('/', authMiddleware, async (req, res) => {
 
 router.get('/', authMiddleware, async (req, res) => {
   const { pageNumber } = req.query;
+  const { userId } = req;
   const number = Number(pageNumber);
   const size = 8;
 
   try {
-    let post;
+    const loggedUser = await FollowerModel.findOne({ user: userId }).select(
+      '-followers'
+    );
+    let post = [];
 
     if (number === 1) {
-      post = await PostModel.find()
-        .limit(size)
-        .sort({ createdAt: -1 })
-        .populate('user')
-        .populate('comments.user');
+      if (loggedUser.following.length > 0) {
+        post = await PostModel.find({
+          user: {
+            $in: [
+              userId,
+              ...loggedUser.following.map((following) => following.user),
+            ],
+          },
+        })
+          .limit(size)
+          .sort({ createdAt: -1 })
+          .populate('user')
+          .populate('comments.user');
+      } else {
+        post = await PostModel.find({ user: userId })
+          .limit(size)
+          .sort({ createdAt: -1 })
+          .populate('user')
+          .populate('comments.user');
+      }
     } else {
       const skips = size * (number - 1);
-      post = await PostModel.find()
-        .skip(skips)
-        .limit(size)
-        .sort({ createdAt: -1 })
-        .populate('user')
-        .populate('comments.user');
+      if (loggedUser.following.length > 0) {
+        post = await PostModel.find({
+          user: {
+            $in: [
+              userId,
+              ...loggedUser.following.map((following) => following.user),
+            ],
+          },
+        })
+          .skip(skips)
+          .limit(size)
+          .sort({ createdAt: -1 })
+          .populate('user')
+          .populate('comments.user');
+      } else {
+        post = await PostModel.find({ user: userId })
+          .skip(skips)
+          .limit(size)
+          .sort({ createdAt: -1 })
+          .populate('user')
+          .populate('comments.user');
+      }
     }
 
     return res.status(200).send({ post });
@@ -131,6 +173,10 @@ router.put('/like/:postId', authMiddleware, async (req, res) => {
     await post.likes.unshift({ user: userId });
     await post.save();
 
+    if (post.user.toString() !== userId) {
+      await newLikeNotification(userId, postId, post.user.toString());
+    }
+
     return res.status(200).send('Post Liked');
   } catch (error) {
     console.error(error);
@@ -160,6 +206,10 @@ router.put('/unlike/:postId', authMiddleware, async (req, res) => {
     // if post already liked so, unlike it.
     await post.likes.splice(isLikedIndex, 1);
     await post.save();
+
+    if (post.user.toString() !== userId) {
+      await removeLikeNotification(userId, postId, post.user.toString());
+    }
 
     return res.status(200).send('Post Unliked');
   } catch (error) {
@@ -198,7 +248,6 @@ router.post('/comment/:postId', authMiddleware, async (req, res) => {
     const post = await PostModel.findById(postId);
 
     if (!post) return res.status(404).send('No post found');
-
     const newComment = {
       _id: uuid(),
       text,
@@ -208,6 +257,16 @@ router.post('/comment/:postId', authMiddleware, async (req, res) => {
 
     await post.comments.unshift(newComment);
     await post.save();
+
+    if (post.user.toString() !== userId) {
+      await newCommentNotification(
+        postId,
+        newComment._id,
+        userId,
+        post.user.toString(),
+        text
+      );
+    }
 
     return res.status(200).send({
       _id: newComment._id,
@@ -236,14 +295,23 @@ router.delete('/:postId/:commentId', authMiddleware, async (req, res) => {
 
     // if an admin (root user) is deleting the comment Or
     // if the comment owner itself is deleting the comment
-
-    if (user.role === 'root' || post.user.toString() === req.userId) {
+    if (user.role === 'root' || comment.user.toString() === req.userId) {
       const index = post.comments
         .map((comment) => comment._id)
         .indexOf(commentId);
 
       await post.comments.splice(index, 1);
       await post.save();
+
+      if (comment.user.toString() !== req.userId) {
+        await removeCommentNotification(
+          postId,
+          commentId,
+          req.userId,
+          post.user.toString()
+        );
+      }
+
       return res.status(200).send('Comment deleted succesfully');
     }
 
