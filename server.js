@@ -24,6 +24,7 @@ nextApp.prepare().then(() => {
   app.use('/api/post', require('./api/post'));
   app.use('/api/profile', require('./api/profile'));
   app.use('/api/notifications', require('./api/notifications'));
+  app.use('/api/chats', require('./api/chats'));
 
   app.all('*', (req, res) => handle(req, res));
 
