@@ -12,7 +12,7 @@ const protectedRoutesPath = [
   '/[username]',
   '/notifications',
   '/post/[postId]',
-  // '/message',
+  '/messages',
   // 'search',
 ];
 
@@ -48,8 +48,8 @@ MyApp.getInitialProps = async ({ Component, ctx }) => {
     });
 
     const { user, userFollowStats } = resp.data;
-    if (user && !protectedRoutes) {
-      redirectUser(ctx, '/');
+    if (user) {
+      !protectedRoutes && redirectUser(ctx, '/');
     }
 
     pageProps = {
