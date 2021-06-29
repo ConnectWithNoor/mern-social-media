@@ -1,8 +1,11 @@
 const express = require('express');
 const next = require('next');
+
 require('dotenv').config({ path: './config.env' });
 
 const connectDB = require('./utilsServer/connectDb');
+const { addUser, removeUser } = require('./utilsServer/roomActions');
+const { loadMessages } = require('./utilsServer/messsageActions');
 
 const dev = process.env.NODE_ENV !== 'production';
 const PORT = process.env.PORT || 3000;
@@ -10,12 +13,39 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 const server = require('http').Server(app);
 
+const io = require('socket.io')(server);
+
 const nextApp = next({ dev });
 const handle = nextApp.getRequestHandler();
 
 app.use(express.json());
 
 connectDB();
+io.on('connection', (socket) => {
+  // join event
+
+  socket.on('join', async ({ userId }) => {
+    const users = await addUser(userId, socket.id);
+
+    setInterval(() => {
+      socket.emit('connectedUsers', {
+        users: users.filter((user) => user.userId !== userId),
+      });
+    }, 10000);
+  });
+
+  socket.on('loadMessages', async ({ userId, messagesWith }) => {
+    const { chat, error } = await loadMessages(userId, messagesWith);
+
+    if (!error) socket.emit('messagesLoaded', { chat });
+  });
+
+  // disconnect event
+  socket.on('disconnect', () => {
+    removeUser(socket.id);
+    console.log('User disconnected successfully');
+  });
+});
 
 nextApp.prepare().then(() => {
   app.use('/api/signup', require('./api/signup'));
