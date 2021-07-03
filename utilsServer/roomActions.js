@@ -9,7 +9,7 @@ const addUser = async (userId, socketId) => {
       if (user && user.socketId !== socketId) {
         await removeUser(user.socketId);
       }
-      const newUser = [userId, socketId];
+      const newUser = { userId, socketId };
       users.push(newUser);
       return users;
     }
@@ -26,4 +26,7 @@ const removeUser = async (socketId) => {
   return;
 };
 
-module.exports = { addUser, removeUser };
+const findConnectedUser = (userId) =>
+  users.find((user) => user.userId === userId);
+
+module.exports = { addUser, removeUser, findConnectedUser };

@@ -4,8 +4,16 @@ const next = require('next');
 require('dotenv').config({ path: './config.env' });
 
 const connectDB = require('./utilsServer/connectDb');
-const { addUser, removeUser } = require('./utilsServer/roomActions');
-const { loadMessages } = require('./utilsServer/messsageActions');
+const {
+  addUser,
+  removeUser,
+  findConnectedUser,
+} = require('./utilsServer/roomActions');
+const {
+  loadMessages,
+  sendMsg,
+  setMsgToUnread,
+} = require('./utilsServer/messsageActions');
 
 const dev = process.env.NODE_ENV !== 'production';
 const PORT = process.env.PORT || 3000;
@@ -38,6 +46,22 @@ io.on('connection', (socket) => {
     const { chat, error } = await loadMessages(userId, messagesWith);
 
     if (!error) socket.emit('messagesLoaded', { chat });
+    else socket.emit('noChatFound');
+  });
+
+  socket.on('sendNewMsg', async ({ userId, msgSendToUserId, msg }) => {
+    const { newMsg, error } = await sendMsg(userId, msgSendToUserId, msg);
+    const receiverSocket = await findConnectedUser(msgSendToUserId);
+
+    if (receiverSocket) {
+      io.to(receiverSocket.socketId).emit('newMsgReceived', { newMsg });
+    } else {
+      await setMsgToUnread(msgSendToUserId);
+    }
+
+    if (!error) {
+      socket.emit('msgSent', { newMsg });
+    }
   });
 
   // disconnect event

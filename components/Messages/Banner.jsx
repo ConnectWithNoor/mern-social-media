@@ -8,7 +8,7 @@ function Banner({ bannerData: { name, profilePicUrl } }) {
         <Grid>
           <Grid.Column floated='left' width={14}>
             <h4>
-              <Image avatar={profilePicUrl} />
+              <Image avatar src={profilePicUrl} />
               {name}
             </h4>
           </Grid.Column>

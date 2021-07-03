@@ -13,6 +13,9 @@ import { useRouter } from 'next/router';
 import io from 'socket.io-client';
 
 import baseUrl from '../utils/baseUrl';
+import getUserInfo from '../utils/getUserInfo';
+import newMsgSound from '../utils/newMsgSound';
+
 import Chat from '../components/Chats/Chat';
 import ChatListSearch from '../components/Chats/ChatListSearch';
 import Banner from '../components/Messages/Banner';
@@ -30,7 +33,7 @@ function Messages({ chatsData, errorLoading, user }) {
 
   // ref is to presist the state of query string throughout rerender
   const openChatId = useRef('');
-
+  // connection
   useEffect(() => {
     if (!socket.current) {
       socket.current = io(baseUrl);
@@ -58,6 +61,7 @@ function Messages({ chatsData, errorLoading, user }) {
     };
   }, []);
 
+  // loading messages
   useEffect(() => {
     const loadMessages = async () => {
       socket.current.emit('loadMessages', {
@@ -71,11 +75,99 @@ function Messages({ chatsData, errorLoading, user }) {
           name: chat.messagesWith.name,
           profilePicUrl: chat.messagesWith.profilePicUrl,
         });
+
+        openChatId.current = chat.messagesWith._id;
+      });
+
+      socket.current.on('noChatFound', async () => {
+        const { name, profilePicUrl } = await getUserInfo(router.query.message);
+
+        setBannerData(name, profilePicUrl);
+        setMessages([]);
+        openChatId.current = router.query.message;
       });
     };
 
-    if (socket.current) loadMessages();
+    if (socket.current && router.query.message) loadMessages();
   }, [router.query.message]);
+
+  // performing messages exchanges
+  useEffect(() => {
+    if (socket.current) {
+      socket.current.on('msgSent', async ({ newMsg }) => {
+        if (newMsg.receiver === openChatId.current) {
+          setMessages((prev) => [...prev, newMsg]);
+
+          setChats((prev) => {
+            const prevChat = prev.find(
+              (chat) => chat.messagesWith === newMsg.receiver
+            );
+            prevChat.lastMessage = newMsg.msg;
+            prevChat.date = newMsg.date;
+            return [...prev];
+          });
+        }
+      });
+
+      socket.current.on('newMsgReceived', async ({ newMsg }) => {
+        let senderName;
+        if (newMsg.sender === openChatId.current) {
+          setMessages((prev) => [...prev, newMsg]);
+          setChats((prev) => {
+            const prevChat = prev.find(
+              (chat) => chat.messagesWith === newMsg.sender
+            );
+            prevChat.lastMessage = newMsg.msg;
+            prevChat.date = newMsg.date;
+            senderName = prevChat.name;
+
+            return [...prev];
+          });
+        } else {
+          const ifPrevMsged =
+            chats.filter((chat) => chat.messagesWith === newMsg.sender).length >
+            0;
+
+          if (ifPrevMsged) {
+            setChats((prev) => {
+              const prevChat = prev.find(
+                (chat) => chat.messagesWith === newMsg.sender
+              );
+              prevChat.lastMessage = newMsg.msg;
+              prevChat.date = newMsg.date;
+              senderName = prevChat.name;
+
+              return [...prev];
+            });
+          } else {
+            const { name, profilePicUrl } = await getUserInfo(newMsg.sender);
+            senderName = name;
+
+            const newChat = {
+              messagesWith: newMsg.sender,
+              name,
+              profilePicUrl,
+              lastMessage: newMsg.msg,
+              date: newMsg.date,
+            };
+            setChats((prev) => [newChat, ...prev]);
+          }
+        }
+
+        newMsgSound(senderName);
+      });
+    }
+  }, []);
+
+  const sendMsg = (msg) => {
+    if (socket.current) {
+      socket.current.emit('sendNewMsg', {
+        userId: user._id,
+        msgSendToUserId: openChatId.current,
+        msg,
+      });
+    }
+  };
 
   return (
     <>
@@ -125,11 +217,11 @@ function Messages({ chatsData, errorLoading, user }) {
                         backgroundColor: 'whitesmoke',
                       }}
                     >
+                      <div style={{ position: 'sticky', top: '0' }}>
+                        <Banner bannerData={bannerData} />
+                      </div>
                       {messages.length > 0 && (
                         <>
-                          <div style={{ position: 'sticky', top: '0' }}>
-                            <Banner bannerData={bannerData} />
-                          </div>
                           {messages.map((message, index) => (
                             <Message
                               key={index}
@@ -143,11 +235,7 @@ function Messages({ chatsData, errorLoading, user }) {
                         </>
                       )}
                     </div>
-                    <MessageInputField
-                      socket={socket.current}
-                      user={user}
-                      messagesWith={openChatId.current}
-                    />
+                    <MessageInputField sendMsg={sendMsg} />
                   </>
                 )}
               </Grid.Column>
@@ -169,7 +257,6 @@ Messages.getInitialProps = async (ctx) => {
         Authorization: token,
       },
     });
-
     return { chatsData: resp.data.chats };
   } catch (error) {
     return { errorLoading: true };
