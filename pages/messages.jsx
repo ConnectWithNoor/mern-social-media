@@ -11,6 +11,7 @@ import axios from 'axios';
 import { parseCookies } from 'nookies';
 import { useRouter } from 'next/router';
 import io from 'socket.io-client';
+import cookie from 'js-cookie';
 
 import baseUrl from '../utils/baseUrl';
 import getUserInfo from '../utils/getUserInfo';
@@ -23,6 +24,11 @@ import Message from '../components/Messages/Message';
 import MessageInputField from '../components/Messages/MessageInputField';
 import { NoMessages } from '../components/Layout/NoData';
 
+const scrollDivToBottom = (divRef) => {
+  divRef.current !== null &&
+    divRef.current.scrollIntoView({ behaviour: 'smooth' });
+};
+
 function Messages({ chatsData, errorLoading, user }) {
   const [chats, setChats] = useState(chatsData || []);
   const [connectedUsers, setConnectedUsers] = useState([]);
@@ -32,7 +38,8 @@ function Messages({ chatsData, errorLoading, user }) {
   const socket = useRef();
 
   // ref is to presist the state of query string throughout rerender
-  const openChatId = useRef('');
+  const openChatId = useRef(null);
+  const divRef = useRef(null);
   // connection
   useEffect(() => {
     if (!socket.current) {
@@ -77,6 +84,7 @@ function Messages({ chatsData, errorLoading, user }) {
         });
 
         openChatId.current = chat.messagesWith._id;
+        divRef.current && scrollDivToBottom(divRef);
       });
 
       socket.current.on('noChatFound', async () => {
@@ -159,6 +167,11 @@ function Messages({ chatsData, errorLoading, user }) {
     }
   }, []);
 
+  // When new / edit a message
+  useEffect(() => {
+    messages.length > 0 && scrollDivToBottom(divRef);
+  }, [messages]);
+
   const sendMsg = (msg) => {
     if (socket.current) {
       socket.current.emit('sendNewMsg', {
@@ -166,6 +179,39 @@ function Messages({ chatsData, errorLoading, user }) {
         msgSendToUserId: openChatId.current,
         msg,
       });
+    }
+  };
+
+  const deleteMsg = (messageId) => {
+    if (socket.current) {
+      socket.current.emit('deleteMsg', {
+        userId: user._id,
+        messagesWith: openChatId.current,
+        messageId,
+      });
+
+      socket.current.on('msgDeleted', async () => {
+        setMessages((prev) =>
+          prev.filter((message) => message._id !== messageId)
+        );
+      });
+    }
+  };
+
+  const deleteChat = async (messagesWith) => {
+    try {
+      await axios.delete(`${baseUrl}/api/chats/${messagesWith}`, {
+        headers: {
+          Authorization: cookie.get('token'),
+        },
+      });
+
+      setChats((prev) =>
+        prev.filter((chat) => chat.messagesWith !== messagesWith)
+      );
+      router.push('/messages', undefined, { shallow: true });
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -199,6 +245,7 @@ function Messages({ chatsData, errorLoading, user }) {
                         connectedUsers={connectedUsers}
                         chat={chat}
                         setChats={setChats}
+                        deleteChat={deleteChat}
                       />
                     ))}
                   </Segment>
@@ -224,12 +271,12 @@ function Messages({ chatsData, errorLoading, user }) {
                         <>
                           {messages.map((message, index) => (
                             <Message
+                              divRef={divRef}
                               key={index}
                               user={user}
                               bannerProfilePic={bannerData.profilePicUrl}
                               message={message}
-                              setMessages={setMessages}
-                              messagesWith={openChatId.current}
+                              deleteMsg={deleteMsg}
                             />
                           ))}
                         </>
