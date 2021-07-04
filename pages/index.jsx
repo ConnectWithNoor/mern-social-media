@@ -1,16 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { parseCookies } from 'nookies';
 import cookies from 'js-cookie';
+import io from 'socket.io-client';
 import { Segment } from 'semantic-ui-react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 import baseUrl from '../utils/baseUrl';
+import getUserInfo from '../utils/getUserInfo';
+import newMsgSound from '../utils/newMsgSound';
 
 import { NoPosts } from '../components/Layout/NoData';
 import CreatePost from '../components/Post/CreatePost';
 import CardPost from '../components/Post/CardPost';
 import { PostDeleteToastr } from '../components/Layout/Toastr';
+import MessageNotificationModel from '../components/Home/MessageNotificationModel';
 import {
   PlaceHolderPosts,
   EndMessage,
@@ -21,9 +25,42 @@ function Index({ user, postsData, errorLoading, userFollowStats }) {
   const [showToaster, setShowToaster] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [pageNumber, setPageNumber] = useState(2);
+  const [newMessageReceieved, setNewMessageReceieved] = useState(null);
+  const [newMessageModel, showNewMessageModel] = useState(false);
+
+  const socket = useRef(null);
 
   useEffect(() => {
     document.title = `Welcome, ${user.name.split(' ')[0]}`;
+
+    if (!socket.current) {
+      socket.current = io(baseUrl);
+    }
+
+    if (socket.current) {
+      socket.current.emit('join', { userId: user._id });
+
+      socket.current.on('newMsgReceived', async ({ newMsg }) => {
+        const { name, profilePicUrl } = await getUserInfo(newMsg.sender);
+        if (user.newMessagePopup) {
+          setNewMessageReceieved({
+            ...newMsg,
+            senderName: name,
+            senderProfilePic: profilePicUrl,
+          });
+          showNewMessageModel(true);
+        }
+
+        newMsgSound(name);
+      });
+    }
+
+    return () => {
+      if (socket.current) {
+        socket.current.emit('disconnect');
+        socket.current.off();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -52,6 +89,15 @@ function Index({ user, postsData, errorLoading, userFollowStats }) {
   return (
     <>
       {showToaster && <PostDeleteToastr />}
+      {newMessageModel && newMessageReceieved && (
+        <MessageNotificationModel
+          socket={socket}
+          showNewMessageModel={showNewMessageModel}
+          newMessageModel={newMessageModel}
+          newMessageReceieved={newMessageReceieved}
+          user={user}
+        />
+      )}
       <Segment>
         <CreatePost user={user} setPosts={setPosts} />
         {posts.length <= 0 || errorLoading ? (

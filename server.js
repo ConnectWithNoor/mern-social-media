@@ -73,6 +73,23 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on(
+    'sendMsgFromNotification',
+    async ({ userId, msgSendToUserId, msg }) => {
+      const { newMsg, error } = await sendMsg(userId, msgSendToUserId, msg);
+      const receiverSocket = await findConnectedUser(msgSendToUserId);
+
+      if (receiverSocket) {
+        io.to(receiverSocket.socketId).emit('newMsgReceived', { newMsg });
+      } else {
+        await setMsgToUnread(msgSendToUserId);
+      }
+      if (!error) {
+        socket.emit('msgSentFromNotification');
+      }
+    }
+  );
+
   // disconnect event
   socket.on('disconnect', () => {
     removeUser(socket.id);
