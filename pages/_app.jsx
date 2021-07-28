@@ -13,7 +13,7 @@ const protectedRoutesPath = [
   '/notifications',
   '/post/[postId]',
   '/messages',
-  // 'search',
+  '/search',
 ];
 
 function MyApp({ Component, pageProps }) {

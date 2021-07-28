@@ -12,9 +12,23 @@ import {
 } from 'semantic-ui-react';
 import nprogress from 'nprogress';
 import Router, { useRouter } from 'next/router';
+import { createMedia } from '@artsy/fresnel';
 
 import Sidemenu from './Sidemenu';
+import MobileHeader from './MobileHeader';
 import Search from './Search';
+
+const AppMedia = createMedia({
+  breakpoints: {
+    zero: 0,
+    mobile: 549,
+    tablet: 850,
+    computer: 1080,
+  },
+});
+
+const mediaStyles = AppMedia.createMediaStyle();
+const { Media, MediaContextProvider } = AppMedia;
 
 function Layout({ children, user }) {
   const contextRef = createRef();
@@ -31,38 +45,109 @@ function Layout({ children, user }) {
       <HeadTags />
 
       {user ? (
-        <div style={{ margin: '0rem 1rem' }}>
-          <Ref innerRef={contextRef}>
-            <Grid>
-              {!messagesRoute ? (
-                <>
-                  <Grid.Column floated='left' width={2}>
-                    <Sticky context={contextRef}>
-                      <Sidemenu user={user} />
-                    </Sticky>
-                  </Grid.Column>
+        <>
+          <style>{mediaStyles}</style>
 
-                  <Grid.Column width={10}>
-                    <Visibility context={contextRef}>{children}</Visibility>
-                  </Grid.Column>
+          <MediaContextProvider>
+            <div style={{ margin: '0rem 1rem' }}>
+              <Media greaterThanOrEqual='computer'>
+                <Ref innerRef={contextRef}>
+                  <Grid>
+                    {!messagesRoute ? (
+                      <>
+                        <Grid.Column floated='left' width={2}>
+                          <Sticky context={contextRef}>
+                            <Sidemenu user={user} pc />
+                          </Sticky>
+                        </Grid.Column>
 
-                  <Grid.Column floated='left' width={4}>
-                    <Sticky context={contextRef}>
-                      <Segment basic>
-                        <Search />
-                      </Segment>
-                    </Sticky>
-                  </Grid.Column>
-                </>
-              ) : (
-                <>
-                  <Grid.Column floated='left' width={1} />
-                  <Grid.Column width={15}>{children}</Grid.Column>
-                </>
-              )}
-            </Grid>
-          </Ref>
-        </div>
+                        <Grid.Column width={10}>
+                          <Visibility context={contextRef}>
+                            {children}
+                          </Visibility>
+                        </Grid.Column>
+
+                        <Grid.Column floated='left' width={4}>
+                          <Sticky context={contextRef}>
+                            <Segment basic>
+                              <Search />
+                            </Segment>
+                          </Sticky>
+                        </Grid.Column>
+                      </>
+                    ) : (
+                      <>
+                        <Grid.Column floated='left' width={1} />
+                        <Grid.Column width={15}>{children}</Grid.Column>
+                      </>
+                    )}
+                  </Grid>
+                </Ref>
+              </Media>
+
+              <Media between={['tablet', 'computer']}>
+                <Ref innerRef={contextRef}>
+                  <Grid>
+                    {!messagesRoute ? (
+                      <>
+                        <Grid.Column floated='left' width={1}>
+                          <Sticky context={contextRef}>
+                            <Sidemenu user={user} pc={false} />
+                          </Sticky>
+                        </Grid.Column>
+
+                        <Grid.Column width={15}>
+                          <Visibility context={contextRef}>
+                            {children}
+                          </Visibility>
+                        </Grid.Column>
+                      </>
+                    ) : (
+                      <>
+                        <Grid.Column floated='left' width={1} />
+                        <Grid.Column width={15}>{children}</Grid.Column>
+                      </>
+                    )}
+                  </Grid>
+                </Ref>
+              </Media>
+
+              <Media between={['mobile', 'tablet']}>
+                <Ref innerRef={contextRef}>
+                  <Grid>
+                    {!messagesRoute ? (
+                      <>
+                        <Grid.Column floated='left' width={2}>
+                          <Sticky context={contextRef}>
+                            <Sidemenu user={user} pc={false} />
+                          </Sticky>
+                        </Grid.Column>
+
+                        <Grid.Column width={14}>
+                          <Visibility context={contextRef}>
+                            {children}
+                          </Visibility>
+                        </Grid.Column>
+                      </>
+                    ) : (
+                      <>
+                        <Grid.Column floated='left' width={1} />
+                        <Grid.Column width={15}>{children}</Grid.Column>
+                      </>
+                    )}
+                  </Grid>
+                </Ref>
+              </Media>
+
+              <Media between={['zero', 'mobile']}>
+                <MobileHeader user={user} />
+                <Grid>
+                  <Grid.Column>{children}</Grid.Column>
+                </Grid>
+              </Media>
+            </div>
+          </MediaContextProvider>
+        </>
       ) : (
         <>
           <Navbar />

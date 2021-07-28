@@ -7,6 +7,7 @@ import { logoutUser } from '../../utils/authUser';
 
 function Sidemenu({
   user: { unreadNotification, email, unreadMessage, username },
+  pc = true,
 }) {
   const router = useRouter();
 
@@ -27,9 +28,7 @@ function Sidemenu({
               size='large'
               color={isActive('/') ? 'teal' : 'grey'}
             />
-            <List.Content>
-              <List.Header content='Home' />
-            </List.Content>
+            <List.Content>{pc && <List.Header content='Home' />}</List.Content>
           </List.Item>
         </Link>
 
@@ -46,7 +45,7 @@ function Sidemenu({
               }
             />
             <List.Content>
-              <List.Header content='Messages' />
+              {pc && <List.Header content='Messages' />}
             </List.Content>
           </List.Item>
         </Link>
@@ -65,7 +64,7 @@ function Sidemenu({
               }
             />
             <List.Content>
-              <List.Header content='Notifications' />
+              {pc && <List.Header content='Notifications' />}
             </List.Content>
           </List.Item>
         </Link>
@@ -80,7 +79,7 @@ function Sidemenu({
               color={router.query.username ? 'teal' : 'grey'}
             />
             <List.Content>
-              <List.Header content='Account' />
+              {pc && <List.Header content='Account' />}
             </List.Content>
           </List.Item>
         </Link>
@@ -89,9 +88,7 @@ function Sidemenu({
 
         <List.Item onClick={() => logoutUser(email)}>
           <Icon name='log out' size='large' color='grey' />
-          <List.Content>
-            <List.Header content='Logout'></List.Header>
-          </List.Content>
+          <List.Content>{pc && <List.Header content='Logout' />}</List.Content>
         </List.Item>
       </List>
     </>
