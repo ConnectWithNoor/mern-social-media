@@ -112,6 +112,7 @@ function Index({ user, postsData, errorLoading, userFollowStats }) {
           >
             {posts.map((post) => (
               <CardPost
+                socket={socket}
                 key={post._id}
                 post={post}
                 user={user}
