@@ -52,7 +52,8 @@ function CreatePost({ user, setPosts }) {
     );
 
     setMedia(null);
-    setMediaPreview(null);
+    mediaPreview && URL.revokeObjectURL(mediaPreview);
+    setTimeout(() => setMediaPreview(null), 3000);
     setLoading(false);
   };
 
@@ -64,6 +65,7 @@ function CreatePost({ user, setPosts }) {
           setMedia={setMedia}
           showModal={showModal}
           setShowModal={setShowModal}
+          setMediaPreview={setMediaPreview}
         />
       )}
 

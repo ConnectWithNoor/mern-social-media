@@ -4,6 +4,29 @@ import Cropper from 'react-cropper';
 
 function CropImageModal({ mediaPreview, setMedia, showModal, setShowModal }) {
   const [cropper, setCropper] = useState();
+
+  useEffect(() => {
+    window.addEventListener('keydown', ({ key }) => {
+      if (cropper) {
+        if (key.toLocaleLowerCase() === 'm') cropper.setDragMode('move');
+        if (key.toLocaleLowerCase() === 'c') cropper.setDragMode('crop');
+        if (key.toLocaleLowerCase() === 'r') cropper.reset();
+      }
+    });
+
+    return () => window.removeEventListener('keydown');
+  }, [cropper]);
+
+  const getCropData = () => {
+    if (cropper) {
+      setMedia(cropper.getCroppedCanvas().toDataURL());
+      setMediaPreview(cropper.getCroppedCanvas().toDataURL());
+      cropper.destroy();
+    }
+
+    setShowModal(false);
+  };
+
   return (
     <>
       <Modal
@@ -65,11 +88,35 @@ function CropImageModal({ mediaPreview, setMedia, showModal, setShowModal }) {
         </Grid>
 
         <Modal.Actions>
-          <Button title='Reset (R)' icon='redo' circular />
-          <Button title='Move Canvas (M)' icon='move' circular />
-          <Button title='New Cropbox (C)' icon='crop' circular />
-          <Button title='Cancel' icon='cacnel' />
-          <Button title='Crop Image' icon='checkmark' positive />
+          <Button
+            title='Reset (R)'
+            icon='redo'
+            circular
+            onClick={() => cropper && cropper.reset()}
+          />
+          <Button
+            title='Move Canvas (M)'
+            icon='move'
+            circular
+            onClick={() => cropper && cropper.setDragMode('move')}
+          />
+          <Button
+            title='New Cropbox (C)'
+            icon='crop'
+            circular
+            onClick={() => cropper && cropper.setDragMode('crop')}
+          />
+          <Button
+            title='Cancel'
+            icon='cancel'
+            onClick={() => setShowModal(false)}
+          />
+          <Button
+            title='Crop Image'
+            icon='checkmark'
+            positive
+            onClick={getCropData}
+          />
         </Modal.Actions>
       </Modal>
     </>
