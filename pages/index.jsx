@@ -15,18 +15,21 @@ import CreatePost from '../components/Post/CreatePost';
 import CardPost from '../components/Post/CardPost';
 import { PostDeleteToastr } from '../components/Layout/Toastr';
 import MessageNotificationModel from '../components/Home/MessageNotificationModel';
+import NotificationPortal from '../components/Home/NotificationPortal';
 import {
   PlaceHolderPosts,
   EndMessage,
 } from '../components/Layout/PlaceHolderGroup';
 
-function Index({ user, postsData, errorLoading, userFollowStats }) {
+function Index({ user, postsData, errorLoading }) {
   const [posts, setPosts] = useState(postsData);
   const [showToaster, setShowToaster] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [pageNumber, setPageNumber] = useState(2);
   const [newMessageReceieved, setNewMessageReceieved] = useState(null);
   const [newMessageModel, showNewMessageModel] = useState(false);
+  const [newNofitication, setNewNofitication] = useState(null);
+  const [notificationPopup, setNofiticaionPopup] = useState(false);
 
   const socket = useRef(null);
 
@@ -67,6 +70,18 @@ function Index({ user, postsData, errorLoading, userFollowStats }) {
     showToaster && setTimeout(() => setShowToaster(false), 3000);
   }, showToaster);
 
+  useEffect(() => {
+    if (socket.current) {
+      socket.current.on(
+        'newNofiticationReceived',
+        ({ name, profilePicUrl, username, postId }) => {
+          setNewNofitication({ name, profilePicUrl, username, postId });
+          setNofiticaionPopup(true);
+        }
+      );
+    }
+  }, []);
+
   const fetchDataonScroll = async () => {
     try {
       const resp = await axios.get(`${baseUrl}/api/post`, {
@@ -88,6 +103,14 @@ function Index({ user, postsData, errorLoading, userFollowStats }) {
 
   return (
     <>
+      {notificationPopup && newNofitication && (
+        <NotificationPortal
+          newNofitication={newNofitication}
+          notificationPopup={notificationPopup}
+          setNofiticaionPopup={setNofiticaionPopup}
+        />
+      )}
+
       {showToaster && <PostDeleteToastr />}
       {newMessageModel && newMessageReceieved && (
         <MessageNotificationModel

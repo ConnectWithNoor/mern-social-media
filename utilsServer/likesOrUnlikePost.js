@@ -1,4 +1,4 @@
-const UserModel = require('../models/UserModel');
+const UserModal = require('../models/UserModel');
 const PostModal = require('../models/PostModal');
 
 const {
@@ -43,7 +43,16 @@ const likeOrUnlikePost = async (postId, userId, like) => {
       }
     }
 
-    return { success: true };
+    const user = await UserModal.findById(userId);
+    const { name, profilePicUrl, username } = user;
+
+    return {
+      success: true,
+      name,
+      profilePicUrl,
+      username,
+      postByUserId: post.user.toString(),
+    };
   } catch (error) {
     return { error: 'Server Error' };
   }

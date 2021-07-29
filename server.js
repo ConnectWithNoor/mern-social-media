@@ -46,9 +46,25 @@ io.on('connection', (socket) => {
   });
 
   socket.on('likePost', async ({ postId, userId, like }) => {
-    const { success, error } = await likeOrUnlikePost(postId, userId, like);
+    const { success, name, profilePicUrl, username, postByUserId, error } =
+      await likeOrUnlikePost(postId, userId, like);
 
-    if (success) socket.emit('postLiked');
+    if (success) {
+      socket.emit('postLiked');
+
+      if (postByUserId !== userId) {
+        const receiverSocket = findConnectedUser(postByUserId);
+
+        if (receiverSocket && like) {
+          io.to(receiverSocket.socketId).emit('newNofiticationReceived', {
+            name,
+            profilePicUrl,
+            username,
+            postId,
+          });
+        }
+      }
+    }
   });
 
   socket.on('loadMessages', async ({ userId, messagesWith }) => {
