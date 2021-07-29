@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Form, Button, Image, Divider, Message, Icon } from 'semantic-ui-react';
 
+import CropImageModal from './CropImageModal';
+
 import uploadPic from '../../utils/uploadPicToCloudinary';
 import { submitNewPost } from '../../utils/postActions';
 
@@ -11,6 +13,7 @@ function CreatePost({ user, setPosts }) {
   const [highlighted, setHighlighted] = useState(false);
   const [media, setMedia] = useState(null);
   const [mediaPreview, setMediaPreview] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const inputRef = useRef(null);
 
   const handleChange = (e) => {
@@ -55,6 +58,15 @@ function CreatePost({ user, setPosts }) {
 
   return (
     <>
+      {showModal && (
+        <CropImageModal
+          mediaPreview={mediaPreview}
+          setMedia={setMedia}
+          showModal={showModal}
+          setShowModal={setShowModal}
+        />
+      )}
+
       <Form error={error} onSubmit={handleSubmit}>
         <Message
           error
@@ -135,6 +147,20 @@ function CreatePost({ user, setPosts }) {
             />
           )}
         </div>
+
+        {mediaPreview && (
+          <>
+            <Divider hidden>
+              <Button
+                content='Crop Image'
+                type='button'
+                primary
+                circular
+                onClick={() => setShowModal(true)}
+              />
+            </Divider>
+          </>
+        )}
 
         <Divider hidden />
 
